@@ -11,4 +11,18 @@ app.listen(8080, function(){
 app.get('/pet', function(req, res){
     res.send("펫용품 페이지입니다.");
 })
-// app.get(경로, 함수(요청, 응답))
+// app.get('경로', 함수(요청, 응답))
+
+app.get('/beauty', function(req, res){
+    res.send("뷰티용품 페이지입니다.");
+})
+
+// npm install -g nodemon 
+// -g는 컴퓨터 내 모든 폴더에서 쓸 수 있게 설치해달라는 것.
+// nodemon은 서버 재실행을 자동화해주는 라이브러리
+// nodemon server.js로 nodemon 실행
+// 이제부턴 코드를 수정하면 서버가 재실행됨
+
+app.get('/', function(req, res){
+    res.sendFile(__dirname + '/index.html');
+})
