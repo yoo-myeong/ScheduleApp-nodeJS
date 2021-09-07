@@ -8,8 +8,11 @@ app.use(express.urlencoded({extended: true}))
 
 // listen(서버 띄울 포트번호, 띄운 후 실행할 코드)
 
+var db;
 const MongoClient = require('mongodb').MongoClient;
-MongoClient.connect('mongodb+srv://admin:<qwer1234>@cluster0.ejuky.mongodb.net/myFirstDatabase?retryWrites=true&w=majority', function(에러, client){
+MongoClient.connect('mongodb+srv://admin:qwer1234@cluster0.ejuky.mongodb.net/myFirstDatabase?retryWrites=true&w=majority', function(에러, client){
+    if(에러) return console.log(에러)
+
     app.listen(8080, function(){
         console.log('listening on 8080')
     });
@@ -47,6 +50,11 @@ app.get('/write', function(req, res){
 app.post('/add', function(요청, 응답){
     응답.send('전송완료');
     console.log(요청.body)
+    db = client.db('ScheduleApp');
+
+    db.collection('post').insertOne({_id:100, 날짜:요청.body.date, 제목:요청.body.title}, function(에러, 결과){
+        console.log('저장완료');
+    });
 })
 
 // 요청이라는 파라미터에 있는 걸 꺼내 쓰려면 body-parser라는 라이브러리를 사용해야 한다.
