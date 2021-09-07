@@ -50,13 +50,19 @@ app.get('/write', function(req, res){
 // listen이나 get 함수는 함수안에 함수를 파라미터로 넣은 콜백함수이다.
 // req, res는 내가 정한 파라미터의 이름인데 첫번째는 요청내용을 담을 것이고, 두번째는 응답할 방법을 담을 것이다.
 
+
 app.post('/add', function(요청, 응답){
     응답.send('전송완료');
-    console.log(요청.body)
-    
-    db.collection('post').insertOne({날짜:요청.body.date, 제목:요청.body.title}, function(에러, 결과){
-        console.log('저장완료');
+    db.collection('counter').findOne({name:'게시물개수'}, function(에러, 결과){
+        var totalpost = 결과.totalpost;
+        
+        db.collection('post').insertOne({_id:totalpost+1, 날짜:요청.body.date, 제목:요청.body.title}, function(에러, 결과){
+            console.log('저장완료');
+            db.collection('counter').updateOne({name:'게시물개수'},{ $inc : {totalpost:1} },function(){})
+        });
+
     });
+    
 })
 
 // 요청이라는 파라미터에 있는 걸 꺼내 쓰려면 body-parser라는 라이브러리를 사용해야 한다.
@@ -64,5 +70,9 @@ app.post('/add', function(요청, 응답){
 
 
 app.get('/list', function(요청, 응답){
-    응답.render('list.ejs');
+    db.collection('post').find().toArray(function(에러, 결과){
+        console.log(결과);
+        응답.render('list.ejs', {posts : 결과});
+    });
+
 })
