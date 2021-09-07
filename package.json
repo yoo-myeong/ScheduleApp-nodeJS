@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/yoo-myeong/ScheduleApp-nodeJS#readme",
   "dependencies": {
+    "ejs": "^3.1.6",
     "express": "^4.17.1",
     "mongodb": "^4.1.1"
   }
