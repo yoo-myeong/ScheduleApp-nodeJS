@@ -1,7 +1,9 @@
 const express = require('express');
 const app = express();
+const methodOverride = require('method-override')
+app.use(methodOverride('_method'))
 
-
+app.use('/public', express.static('public'))
 
 app.use(express.urlencoded({extended: true})) 
 // 라이브러리가 서버 만들려면 이렇게 쓰라고 해놨을 뿐 이해하고 사용할 필요없다. 기본 셋팅이라고 알아두면 된다.
@@ -40,11 +42,11 @@ app.get('/beauty', function(req, res){
 // 이제부턴 코드를 수정하면 서버가 재실행됨
 
 app.get('/', function(req, res){
-    res.sendFile(__dirname + '/index.html');
+    res.render('index.ejs');
 })
 
 app.get('/write', function(req, res){
-    res.sendFile(__dirname + '/write.html');
+    res.render( 'write.ejs');
 })
 
 // listen이나 get 함수는 함수안에 함수를 파라미터로 넣은 콜백함수이다.
@@ -83,4 +85,24 @@ app.delete('/delete', function(요청, 응답){
       console.log('삭제완료')
     })
     응답.status(200).send({message : "성공했습니다."});
+  });
+
+app.get('/detail/:id', function(요청, 응답){
+    db.collection('post').findOne({_id: parseInt(요청.params.id)},function(에러, 결과){
+        응답.render('detail.ejs', { context : 결과});
+    })
+})
+
+app.get('/edit/:id', function(요청, 응답){
+    db.collection('post').findOne({ _id : parseInt(요청.params.id) }, function(에러, 결과){
+      응답.render('edit.ejs', { post : 결과 })
+    })
+    
+  });
+
+  app.put('/edit', function(요청, 응답){
+    db.collection('post').updateOne( {_id : parseInt(요청.body.id)}, {$set : { 제목 : 요청.body.title, 날짜 : 요청.body.date }}, function(){
+      console.log('수정완료')
+      응답.redirect('/list')
+    });
   });
