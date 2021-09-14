@@ -1,3 +1,5 @@
+require('dotenv').config()
+
 const express = require('express');
 const app = express();
 const methodOverride = require('method-override')
@@ -128,6 +130,22 @@ app.post('/login', passport.authenticate('local', {failureRedirect : '/fail'}), 
 // passport 가 로그인을 검사하는 라이브러리
 // authenticate는 회원 인증하는 함수
 
+app.get('/mypage', login_compelete ,function(req, res){
+    console.log(req.user);
+    res.render('mypage.ejs', { 사용자: req.user })
+})
+// login_copelete 함수 만들어서 미들웨어로 사용하기
+function login_compelete(req, res, next){
+    if (req.user){
+        next()
+    }
+    else{
+        res.send('No login')
+    }
+}
+
+
+
 //인증하는 방식 설정
 passport.use(new LocalStrategy({
     usernameField: 'id',
@@ -153,6 +171,16 @@ passport.serializeUser(function (user, done) { // 유저의 정보를 암호문�
     done(null, user.id)
   });
   
-passport.deserializeUser(function (아이디, done) { //
-done(null, {})
-}); 
+  passport.deserializeUser(function (아이디, done) {
+    db.collection('login').findOne({ id: 아이디 }, function (에러, 결과) {
+      done(null, 결과)
+    })
+  }); 
+
+
+  app.get('/search', (요청, 응답)=>{
+    console.log(요청.query);
+    db.collection('post').find({제목 : 요청.query.value}).toArray((에러, 결과)=>{
+      console.log(결과)
+    })
+  })
