@@ -55,23 +55,6 @@ app.get('/write', function (req, res) {
 // req, res는 내가 정한 파라미터의 이름인데 첫번째는 요청내용을 담을 것이고, 두번째는 응답할 방법을 담을 것이다.
 
 
-app.post('/add', function (요청, 응답) {
-    응답.send('전송완료');
-    db.collection('counter').findOne({ name: '게시물개수' }, function (에러, 결과) {
-        var totalpost = 결과.totalpost;
-
-        db.collection('post').insertOne({ _id: totalpost + 1, 날짜: 요청.body.date, 제목: 요청.body.title }, function (에러, 결과) {
-            console.log('저장완료');
-            db.collection('counter').updateOne({ name: '게시물개수' }, { $inc: { totalpost: 1 } }, function () { })
-        });
-
-    });
-
-})
-
-// 요청이라는 파라미터에 있는 걸 꺼내 쓰려면 body-parser라는 라이브러리를 사용해야 한다.
-//app.use(express.urlencoded({extended: true}))  이 코드를 위에 추가 해주면 사용할 수 있다.
-
 
 app.get('/list', function (요청, 응답) {
     db.collection('post').find().toArray(function (에러, 결과) {
@@ -81,13 +64,6 @@ app.get('/list', function (요청, 응답) {
 
 })
 
-app.delete('/delete', function (요청, 응답) {
-    요청.body._id = parseInt(요청.body._id)
-    db.collection('post').deleteOne(요청.body, function (에러, 결과) {
-        console.log('삭제완료')
-    })
-    응답.status(200).send({ message: "성공했습니다." });
-});
 
 app.get('/detail/:id', function (요청, 응답) {
     db.collection('post').findOne({ _id: parseInt(요청.params.id) }, function (에러, 결과) {
@@ -178,6 +154,23 @@ passport.deserializeUser(function (아이디, done) {
 });
 
 
+app.post('/add', function (요청, 응답) {
+    응답.send('전송완료');
+    db.collection('counter').findOne({ name: '게시물개수' }, function (에러, 결과) {
+        var totalpost = 결과.totalpost;
+        var 저장할것 = { _id: totalpost + 1, 날짜: 요청.body.date, 제목: 요청.body.title, 작성자 : 요청.user._id }
+        db.collection('post').insertOne(저장할것, function (에러, 결과) {
+            console.log('저장완료');
+            db.collection('counter').updateOne({ name: '게시물개수' }, { $inc: { totalpost: 1 } }, function () { })
+        });
+
+    });
+
+})
+
+// 요청이라는 파라미터에 있는 걸 꺼내 쓰려면 body-parser라는 라이브러리를 사용해야 한다.
+//app.use(express.urlencoded({extended: true}))  이 코드를 위에 추가 해주면 사용할 수 있다.
+
 app.get('/search', (요청, 응답) => {
 
     var 검색조건 = [
@@ -197,3 +190,24 @@ app.get('/search', (요청, 응답) => {
         응답.render('search.ejs', { posts: 결과 })
     })
 })
+
+
+app.delete('/delete', function (요청, 응답) {
+    요청.body._id = parseInt(요청.body._id);
+    //요청.body에 담겨온 게시물번호를 가진 글을 db에서 찾아서 삭제해주세요
+    db.collection('post').deleteOne({_id : 요청.body._id, 작성자 : 요청.user._id }, function (에러, 결과) {
+      console.log('삭제완료');
+      console.log('에러',에러)
+      응답.status(200).send({ message: '성공했습니다' });
+    })
+});
+
+
+app.post('/register', function (요청, 응답) {
+    db.collection('login').insertOne({ id: 요청.body.id, pw: 요청.body.pw }, function (에러, 결과) {
+      응답.redirect('/')
+    })
+  })
+
+
+app.use('/shop', require('./routes/shop.js'));
