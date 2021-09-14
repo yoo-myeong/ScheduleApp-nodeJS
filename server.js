@@ -100,9 +100,59 @@ app.get('/edit/:id', function(요청, 응답){
     
   });
 
-  app.put('/edit', function(요청, 응답){
-    db.collection('post').updateOne( {_id : parseInt(요청.body.id)}, {$set : { 제목 : 요청.body.title, 날짜 : 요청.body.date }}, function(){
-      console.log('수정완료')
-      응답.redirect('/list')
-    });
+app.put('/edit', function(요청, 응답){
+db.collection('post').updateOne( {_id : parseInt(요청.body.id)}, {$set : { 제목 : 요청.body.title, 날짜 : 요청.body.date }}, function(){
+    console.log('수정완료')
+    응답.redirect('/list')
+});
+});
+
+const passport = require('passport');
+const LocalStrategy = require('passport-local').Strategy;
+const session = require('express-session');
+
+app.use(session({secret : '비밀코드', resave : true, saveUninitialized: false}));
+app.use(passport.initialize());
+app.use(passport.session()); 
+// app.use(미들웨어)
+
+app.get('/login', function(요청, 응답){
+    응답.render('login.ejs')
   });
+app.post('/login', passport.authenticate('local', {failureRedirect : '/fail'}), function(요청, 응답){
+    응답.redirect('/')
+  });
+
+// login form을 전송받으면 아이디랑 비번을 검사한다.
+// 검사가 통과하면 응답
+// passport 가 로그인을 검사하는 라이브러리
+// authenticate는 회원 인증하는 함수
+
+//인증하는 방식 설정
+passport.use(new LocalStrategy({
+    usernameField: 'id',
+    passwordField: 'pw',
+    session: true,
+    passReqToCallback: false,
+  }, function (입력한아이디, 입력한비번, done) {
+    //console.log(입력한아이디, 입력한비번);
+    db.collection('login').findOne({ id: 입력한아이디 }, function (에러, 결과) {
+      if (에러) return done(에러)
+  
+      if (!결과) return done(null, false, { message: '존재하지않는 아이디요' })
+      if (입력한비번 == 결과.pw) {
+        return done(null, 결과)
+      } else {
+        return done(null, false, { message: '비번틀렸어요' })
+      }
+    })
+  }));
+
+//이 사람이 로그인을 했단 정보를 세션으로 만들어야함
+passport.serializeUser(function (user, done) { // 유저의 정보를 암호문으로 만들어서 저장
+    done(null, user.id)
+  });
+  
+passport.deserializeUser(function (아이디, done) { //
+done(null, {})
+}); 
